@@ -1,0 +1,124 @@
+dependancy
+-------------------------------------
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.opencsv</groupId>
+        <artifactId>opencsv</artifactId>
+        <version>5.5.2</version>
+    </dependency>sss
+</dependencies>
+----------------------------------
+to create student class
+
+public class Students 
+{
+	  private String id;
+	  private String name;
+	  private int age;
+	    
+	 public Students(String id, String name, int age) 
+	 {
+			super();
+			this.id = id;
+			this.name = name;
+			this.age = age;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
+	}
+	 
+	    
+}
+-------------------------------------------------------------------------------------------------------------
+Create a StudentService class to handle the logic for retrieving and paginating student details:
+
+import com.opencsv.bean.CsvToBeanBuilder;
+import org.springframework.stereotype.Service;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+
+@Service
+public class StudentService {
+    private static final String FILE_PATH = "student_details.csv";
+
+    public List<Student> getStudents(int page, int size) throws IOException {
+        List<Student> allStudents = new CsvToBeanBuilder<Student>(new FileReader(FILE_PATH))
+                .withType(Student.class)
+                .build()
+                .parse();
+
+        int startIndex = (page - 1) * size;
+        int endIndex = Math.min(startIndex + size, allStudents.size());
+
+        return allStudents.subList(startIndex, endIndex);
+    }
+}
+----------------------------------------------------------------------------------------------------------------------------
+Create a StudentController class to define the API endpoints:
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.util.List;
+
+@RestController
+public class StudentController {
+    private final StudentService studentService;
+
+    @Autowired
+    public StudentController(StudentService studentService) {
+        this.studentService = studentService;
+    }
+
+    @GetMapping("/students")
+    public List<Student> getStudents(@RequestParam int page, @RequestParam int size,
+                                     @RequestParam(required = false) String filterColumn,
+                                     @RequestParam(required = false) String filterValue) throws IOException {
+        return studentService.getStudents(page, size, filterColumn, filterValue);
+    }
+}
+------------------------------------------------------------------------------------------------------------------------
+Create the main class StudentDetailsApiApplication to run the Spring Boot application:
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class StudentDetailsApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(StudentDetailsApiApplication.class, args);
+    }
+}
+---------------------------------------------------------------------------------------------------
+Now you can start the Spring Boot application, and it will launch the API server. You can access the API at http://localhost:8080/students?page=<page_number>&size=<page_size>, where <page_number> is the desired page number, and <page_size> is the number of items per page.
+
+Adjust the code and file paths as necessary based on your specific requirements. You can use other file formats like JSON by using appropriate libraries to parse the data.
